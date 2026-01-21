@@ -1,0 +1,5 @@
+{
+  "name": "React PubSub Chat & AI",
+  "description": "A real-time chat application demonstrating the Publisher-Subscriber pattern using BroadcastChannel (to simulate PubNub across tabs) and Google Gemini API for an intelligent chatbot participant.",
+  "requestFramePermissions": []
+}
