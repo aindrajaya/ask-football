@@ -3,6 +3,7 @@ import { ChannelList } from './components/ChannelList';
 import { ChatWindow } from './components/ChatWindow';
 import { pubSub } from './services/pubSubService';
 import { aiClient, initializeAIClient } from './services';
+import { checkRateLimit, recordMessage, getRateLimitStatus } from './services/rateLimitService';
 import { Channel, Message, PubSubEvent, PubSubPayload, User } from './types';
 
 // Initialize the AI provider on app startup
@@ -32,6 +33,12 @@ const App: React.FC = () => {
     'matchday-chat': [],
   });
   const [aiEnabled, setAiEnabled] = useState<boolean>(true);
+  const [rateLimitStatus, setRateLimitStatus] = useState<{
+    canChat: boolean;
+    messagesRemaining: number;
+    messagesUsed: number;
+    resetTime: string;
+  } | null>(null);
 
   // Initialize User on Mount
   useEffect(() => {
@@ -43,6 +50,11 @@ const App: React.FC = () => {
       avatarUrl: `https://picsum.photos/seed/${randomId}/200/200`,
     };
     setCurrentUser(user);
+
+    // Check rate limit on load
+    getRateLimitStatus().then(status => {
+      setRateLimitStatus(status);
+    });
   }, []);
 
   // Handle incoming PubSub messages
@@ -72,6 +84,15 @@ const App: React.FC = () => {
   const handleSendMessage = async (text: string) => {
     if (!currentUser) return;
 
+    // Check rate limit
+    const limitStatus = await checkRateLimit();
+    setRateLimitStatus(limitStatus);
+
+    if (!limitStatus.canChat) {
+      alert(`You've reached your daily limit of 3 messages. Try again tomorrow at ${limitStatus.resetTime}`);
+      return;
+    }
+
     const newMessage: Message = {
       id: Date.now().toString(),
       text,
@@ -86,7 +107,10 @@ const App: React.FC = () => {
       payload: newMessage,
     });
 
-    // 2. If AI is enabled, trigger a response
+    // 2. Record message for rate limiting
+    await recordMessage();
+
+    // 3. If AI is enabled, trigger a response
     if (aiEnabled) {
       // Get current history for context
       const history = messages[activeChannelId] || [];
@@ -186,6 +210,36 @@ const App: React.FC = () => {
                  channel: {activeChannelId}
                </div>
              </div>
+          </div>
+
+          <div>
+            <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Daily Rate Limit</h4>
+            {rateLimitStatus ? (
+              <div className="bg-gray-900 p-3 rounded-lg border border-gray-700">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px]">Messages Used</span>
+                  <span className={`text-sm font-bold ${rateLimitStatus.canChat ? 'text-green-400' : 'text-red-400'}`}>
+                    {rateLimitStatus.messagesUsed}/3
+                  </span>
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
+                  <div 
+                    className={`h-2 rounded-full transition-all ${rateLimitStatus.canChat ? 'bg-green-500' : 'bg-red-500'}`}
+                    style={{ width: `${(rateLimitStatus.messagesUsed / 3) * 100}%` }}
+                  ></div>
+                </div>
+                <p className="text-[9px] text-gray-400">
+                  {rateLimitStatus.canChat 
+                    ? `${rateLimitStatus.messagesRemaining} message${rateLimitStatus.messagesRemaining !== 1 ? 's' : ''} remaining today` 
+                    : 'Limit reached. Try again tomorrow'}
+                </p>
+                <p className="text-[9px] text-gray-500 mt-1">
+                  Reset: {new Date(rateLimitStatus.resetTime).toLocaleTimeString()}
+                </p>
+              </div>
+            ) : (
+              <div className="text-[10px] text-gray-400">Loading rate limit...</div>
+            )}
           </div>
         </div>
       </div>
