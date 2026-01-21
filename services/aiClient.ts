@@ -5,7 +5,7 @@ import { Message } from "../types";
  * Abstracts away provider-specific implementation details.
  */
 export interface AIProvider {
-  generateResponse(currentMessage: string, history: Message[]): Promise<string>;
+  generateResponse(currentMessage: string, history: Message[], channel: string): Promise<string>;
 }
 
 /**
@@ -24,12 +24,15 @@ class AIClient {
 
   /**
    * Generate an AI response using the active provider.
+   * @param currentMessage The user's message
+   * @param history Chat history for context
+   * @param channel The channel ID (used for channel-specific prompts)
    */
-  async generateResponse(currentMessage: string, history: Message[]): Promise<string> {
+  async generateResponse(currentMessage: string, history: Message[], channel: string): Promise<string> {
     if (!this.provider) {
       return "Error: No AI provider configured. Please check your environment setup.";
     }
-    return this.provider.generateResponse(currentMessage, history);
+    return this.provider.generateResponse(currentMessage, history, channel);
   }
 }
 

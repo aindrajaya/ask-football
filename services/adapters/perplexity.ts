@@ -16,7 +16,7 @@ class PerplexityProvider implements AIProvider {
     this.apiKey = API_KEY;
   }
 
-  async generateResponse(currentMessage: string, history: Message[]): Promise<string> {
+  async generateResponse(currentMessage: string, history: Message[], channel: string): Promise<string> {
     if (!this.apiKey) {
       return "Error: Perplexity API Key is missing. Please check your environment configuration.";
     }
@@ -27,8 +27,8 @@ class PerplexityProvider implements AIProvider {
         `${msg.sender.username}: ${msg.text}`
       ).join('\n');
 
-      // Use the football prompt builder
-      const systemPrompt = buildPrompt(currentMessage, context, true);
+      // Use the football prompt builder with channel context
+      const systemPrompt = buildPrompt(currentMessage, context, channel as any, true);
 
       // Prepare messages for Perplexity API (expects role/content format)
       const messages = [

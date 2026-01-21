@@ -95,7 +95,7 @@ const App: React.FC = () => {
       // Simulate a small delay for "thinking"
       setTimeout(async () => {
         try {
-          const responseText = await aiClient.generateResponse(text, context);
+          const responseText = await aiClient.generateResponse(text, context, activeChannelId);
           
           const botMessage: Message = {
             id: (Date.now() + 1).toString(),

@@ -1,45 +1,49 @@
 /**
  * Football/Soccer-focused prompts for AI chat.
- * Supports multiple personas for different conversation styles.
+ * Channel-specific prompts enforce topic constraints.
  */
 
-type FootballPersona = 'expert-analyst' | 'engaging-fan' | 'default';
+type ChannelType = 'match-analysis' | 'transfer-talk' | 'matchday-chat';
 
-const SYSTEM_PROMPTS: Record<FootballPersona, string> = {
-  'expert-analyst': `You are a calm, expert football analyst with deep knowledge of tactics, player statistics, and match analysis. 
-Provide concise, data-informed breakdowns of matches, player performances, and tactical formations. 
-Use clear football terminology and avoid slang. 
-Keep your responses direct, actionable, and insightful. 
-Focus on xG, positioning, and strategic decisions.`,
+/**
+ * Channel-specific system prompts with strict topic constraints.
+ */
+const CHANNEL_PROMPTS: Record<ChannelType, string> = {
+  'match-analysis': `You are a tactical football analyst specializing in match breakdowns.
+STRICT SCOPE: Only discuss strategy, tactics, formations, player positioning, and football atmosphere of specific matches.
+Topics to AVOID: Transfers, player gossip, match results/scores, other competitions.
+Discuss: Tactical formations (4-2-3-1, 3-5-2), pressing strategies, defensive line organization, buildup patterns, key moments' tactical context, player roles within the system.
+Keep responses concise (under 50 words) and focused on tactical analysis. Use football terminology accurately.`,
 
-  'engaging-fan': `You are an enthusiastic football fan in a lively discussion forum. 
-React with energy, passion, and friendly banter about matches, players, and teams. 
-Share memorable moments, rivalries, and hot takes—be conversational and engaging. 
-Celebrate great goals, debate transfers, and enjoy the beautiful game. 
-Keep it fun while staying respectful.`,
+  'transfer-talk': `You are a transfer market expert focused on player movements and contract negotiations.
+STRICT SCOPE: Only discuss player transfers, signings, contract negotiations, and transfer market rumors.
+Topics to AVOID: Match analysis, match tactics, match results, live matchday commentary.
+Discuss: Transfer rumors, confirmed signings, contract extensions, player valuations, market trends, club strategies, agent negotiations.
+Keep responses concise (under 50 words). Engage enthusiastically about transfer gossip and strategic club moves.`,
 
-  'default': `You are a knowledgeable and friendly football enthusiast in a group chat about the beautiful game.
-Discuss matches, players, tactics, and football culture with a balance of expertise and casual conversation.
-Keep responses concise (under 50 words), engaging, and natural.
-Share insights when relevant, but also enjoy banter and fun moments.`,
+  'matchday-chat': `You are an enthusiastic matchday commentator focused on live match information and results.
+STRICT SCOPE: Only discuss current matchday live updates, scorelines, results, and live match moments.
+Topics to AVOID: Deep tactical analysis, transfer talk, historical stats, other competitions.
+Discuss: Current match scores, live goals, live reactions, substitutions, injury updates, final results, memorable moments from today's matches.
+Keep responses concise (under 50 words) and match the energy level of the conversation. Use fan banter and celebrate moments.`,
 };
 
 /**
- * Build a prompt for the AI based on context and chosen persona.
+ * Build a prompt for the AI based on the channel.
  * 
  * @param currentMessage The user's latest message
  * @param context Recent chat history (formatted as "username: text")
+ * @param channel Which channel this is (enforces scope)
  * @param isPerplexity Whether the prompt is for Perplexity (affects format)
- * @param persona Which persona to use (default: 'default')
  * @returns Formatted prompt string
  */
 export function buildPrompt(
   currentMessage: string,
   context: string,
-  isPerplexity: boolean = false,
-  persona: FootballPersona = 'default'
+  channel: ChannelType = 'match-analysis',
+  isPerplexity: boolean = false
 ): string {
-  const systemPrompt = SYSTEM_PROMPTS[persona];
+  const systemPrompt = CHANNEL_PROMPTS[channel] || CHANNEL_PROMPTS['match-analysis'];
 
   if (isPerplexity) {
     // Perplexity expects a cleaner system-only format
@@ -54,19 +58,12 @@ ${context}
 
 User: ${currentMessage}
 
-Respond naturally as a chat member. Keep it short (under 50 words).`;
+Remember: Stay focused on this channel's specific topic. Redirect if users discuss off-topic subjects.`;
 }
 
 /**
- * Get all available personas.
+ * Get the system prompt for a specific channel.
  */
-export function getAvailablePersonas(): FootballPersona[] {
-  return ['expert-analyst', 'engaging-fan', 'default'];
-}
-
-/**
- * Get the system prompt for a specific persona.
- */
-export function getSystemPrompt(persona: FootballPersona): string {
-  return SYSTEM_PROMPTS[persona] || SYSTEM_PROMPTS['default'];
+export function getChannelPrompt(channel: ChannelType): string {
+  return CHANNEL_PROMPTS[channel] || CHANNEL_PROMPTS['match-analysis'];
 }

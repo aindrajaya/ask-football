@@ -18,7 +18,7 @@ class GeminiProvider implements AIProvider {
     }
   }
 
-  async generateResponse(currentMessage: string, history: Message[]): Promise<string> {
+  async generateResponse(currentMessage: string, history: Message[], channel: string): Promise<string> {
     if (!this.ai) {
       return "Error: Gemini API Key is missing. Please check your environment configuration.";
     }
@@ -29,8 +29,8 @@ class GeminiProvider implements AIProvider {
         `${msg.sender.username}: ${msg.text}`
       ).join('\n');
 
-      // Use the football prompt builder
-      const prompt = buildPrompt(currentMessage, context);
+      // Use the football prompt builder with channel context
+      const prompt = buildPrompt(currentMessage, context, channel as any, false);
 
       const response = await this.ai.models.generateContent({
         model: 'gemini-3-flash-preview',
