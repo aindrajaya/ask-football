@@ -7,7 +7,7 @@ A real-time, multi-channel chat application with AI-powered discussion about foo
 - 🎯 **Three football-focused channels**: Match analysis, transfer talk, matchday chat
 - 🤖 **Pluggable AI providers**: Switch between Perplexity and Gemini with environment variables
 - 💬 **Real-time pub/sub chat**: BroadcastChannel API for instant message delivery
-- ⚽ **Football expertise**: AI personas optimized for tactical analysis and fan discussion
+- ⚽ **Channel-specific AI constraints**: Each channel enforces topic-focused discussions
 - 🎨 **Modern dark UI**: Responsive design with Tailwind CSS
 
 ## Prerequisites
@@ -84,7 +84,7 @@ services/
 │   └── perplexity.ts    # Perplexity API adapter
 └── index.ts             # Auto-detection & initialization
 prompts/
-└── football.ts          # AI personas: expert analyst, fan forum, default
+└── football.ts          # Channel-specific prompts with constraints
 ```
 
 ## Switching Providers
@@ -106,19 +106,26 @@ The app will auto-detect and use the new provider. No code changes needed.
 
 ## Channels
 
-- **match-analysis**: Tactical breakdowns, xG, lineups, key moments
-- **transfer-talk**: Rumors, confirmed moves, transfer strategy
-- **matchday-chat**: Live reactions, chants, play-by-play fan commentary
+Each channel has dedicated topic constraints to keep discussions focused:
 
-## AI Personas
+### 🎯 **match-analysis**
+- **Scope**: Tactical breakdowns, formations, pressing strategies, player positioning
+- **Discuss**: 4-2-3-1 formations, defensive organization, buildup patterns, tactical context
+- **Avoid**: Transfer news, match scores, live commentary
 
-The AI responds with one of three personas:
+### 💼 **transfer-talk**
+- **Scope**: Player transfers, signings, contract negotiations, market trends
+- **Discuss**: Transfer rumors, fee valuations, contract negotiations, club strategy
+- **Avoid**: Match tactics, live scores, historical stats
 
-- **Expert Analyst**: Data-driven, tactical, focused on formations and player stats
-- **Engaging Fan**: Enthusiastic, passionate, banter-focused, fun discussion
-- **Default**: Balanced knowledge with casual conversation (currently active)
+### 🎯 **matchday-chat**
+- **Scope**: Current matchday info, live updates, scores, and results
+- **Discuss**: Live goals, substitutions, final results, memorable moments from today's matches
+- **Avoid**: Deep tactical analysis, transfer news, historical data
 
-To change the persona, edit `prompts/football.ts` and rebuild.
+The AI bot automatically enforces these constraints based on the active channel. This ensures focused, quality discussions in each space.
+
+For detailed examples and customization, see [CHANNEL_CONSTRAINTS.md](CHANNEL_CONSTRAINTS.md).
 
 ## Troubleshooting
 
