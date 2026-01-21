@@ -8,6 +8,7 @@ A real-time, multi-channel chat application with AI-powered discussion about foo
 - 🤖 **Pluggable AI providers**: Switch between Perplexity and Gemini with environment variables
 - 💬 **Real-time pub/sub chat**: BroadcastChannel API for instant message delivery
 - ⚽ **Channel-specific AI constraints**: Each channel enforces topic-focused discussions
+- 🚫 **IP-based rate limiting**: 3 messages per day per IP address with automatic daily reset
 - 🎨 **Modern dark UI**: Responsive design with Tailwind CSS
 
 ## Prerequisites
@@ -82,7 +83,9 @@ services/
 ├── adapters/
 │   ├── gemini.ts        # Gemini API adapter
 │   └── perplexity.ts    # Perplexity API adapter
-└── index.ts             # Auto-detection & initialization
+├── index.ts             # Auto-detection & initialization
+├── rateLimitService.ts  # IP-based rate limiting (3 msg/day)
+└── pubSubService.ts     # BroadcastChannel pub/sub
 prompts/
 └── football.ts          # Channel-specific prompts with constraints
 ```
@@ -127,12 +130,39 @@ The AI bot automatically enforces these constraints based on the active channel.
 
 For detailed examples and customization, see [CHANNEL_CONSTRAINTS.md](CHANNEL_CONSTRAINTS.md).
 
+## Rate Limiting
+
+To manage API costs and prevent spam, the app enforces **3 messages per day per IP address**.
+
+### How It Works
+- **Detection**: Auto-detects your IP using the ipify API
+- **Tracking**: Stores message count in browser localStorage
+- **Reset**: Automatic daily reset at midnight UTC
+- **Dashboard**: Real-time widget shows remaining messages
+
+### What You'll See
+- **Progress Bar**: Shows messages used (0/3 → 1/3 → 2/3 → 3/3)
+- **Status Text**: "2 messages remaining today" or "Limit reached"
+- **Reset Time**: Countdown to next daily reset
+- **Alert**: When limit reached, shows exact reset time
+
+### Testing/Reset
+For testing purposes, you can reset your limit in the browser console:
+```javascript
+import { resetRateLimit } from './services/rateLimitService';
+await resetRateLimit();
+```
+
+For complete technical documentation, see [RATE_LIMITING.md](RATE_LIMITING.md).
+
 ## Troubleshooting
 
 - **"No AI provider configured"**: Ensure `.env.local` has either `GEMINI_API_KEY` or `PERPLEXITY_API_KEY`
 - **API errors in console**: Check that your API key is valid and has not expired
 - **Messages not appearing**: Ensure you're in the same browser (BroadcastChannel API limitation)
 - **CORS issues**: Both Perplexity and Gemini support cross-origin requests from modern browsers
+- **Rate limit shows "Loading..."**: Check internet connection (needs access to ipify.org)
+- **Daily limit reached early**: Limit is shared across all tabs/devices on same IP address
 
 ## Deployment
 
